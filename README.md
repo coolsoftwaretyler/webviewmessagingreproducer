@@ -18,6 +18,7 @@ On iOS this works perfectly. But on Android, you'll see the timestamps drift ver
 
    ```bash
    npm install
+   cd ios && pod install && cd ..
    ```
 
 2. Start the app
