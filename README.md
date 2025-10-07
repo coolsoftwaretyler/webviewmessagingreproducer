@@ -8,7 +8,7 @@ This is an Expo SDK 53 app that demonstrates the timing difference between iOS a
 
    ```bash
    npm install
-   cd ios && pod install && cd ..
+   npx expo prebuild --clean
    ```
 
 2. **One-command setup** (recommended)
@@ -34,7 +34,8 @@ This is an Expo SDK 53 app that demonstrates the timing difference between iOS a
 ### Android Setup
 
 For Android to work, you must register your package name:
-1. Go to https://dashboard.plaid.com/developers/api
+
+1. Go to <https://dashboard.plaid.com/developers/api>
 2. Under "Allowed Android package names", add: `com.coolsoftwaretyler.webviewmessage`
 3. Click "Save Changes"
 4. Wait 1-2 minutes, then run `./setup-plaid.sh` again to generate a token that works on both platforms
@@ -44,11 +45,13 @@ For Android to work, you must register your package name:
 If you prefer to do it step-by-step:
 
 1. Configure credentials:
+
    ```bash
    ./setup-plaid.sh
    ```
 
 2. Generate a link token:
+
    ```bash
    node generate-link-token.js  # or generate-link-token-ios-only.js
    ```
@@ -57,7 +60,7 @@ If you prefer to do it step-by-step:
 
 ## Reproduce the bug
 
-1. Paste your link token into the app (or update it in `app/(tabs)/index.tsx`)
+1. Open the app
 2. Tap "Initialize Plaid Link"
 3. Tap "Open Plaid Link"
 4. Go through the onboarding - choose a bank, choose an account, accept, come back to the main index screen
@@ -71,10 +74,3 @@ Android's WebView will have a timestamp much later than your logs. See ./android
 ### iOS
 
 Works. See ./ios-works.mov
-
-## Security Notes
-
-- Never commit your `.env` file to git
-- The `.env` file contains sensitive Plaid credentials
-- Use `./setup-plaid.sh` to configure credentials on new machines
-- See `.env.example` for the expected format
