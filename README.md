@@ -38,8 +38,8 @@ On iOS this works perfectly. But on Android, you'll see the timestamps drift ver
 
 ### Android
 
-Android's WebView will have a timestamp much later than your logs
+Android's WebView will have a timestamp much later than your logs. See ./android-does-not-work.mov
 
 ### iOS
 
-Works
+Works. See ./ios-works.mov
