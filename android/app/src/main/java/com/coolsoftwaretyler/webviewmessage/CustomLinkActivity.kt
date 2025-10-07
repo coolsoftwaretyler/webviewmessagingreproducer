@@ -5,9 +5,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.graphics.Color
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class CustomLinkActivity : Activity() {
+
+    private lateinit var timestampText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,28 +25,44 @@ class CustomLinkActivity : Activity() {
             setBackgroundColor(Color.WHITE)
         }
 
-        // Success button
-        val successButton = Button(this).apply {
-            text = "Complete Link (Success)"
+        // Timestamp display
+        timestampText = TextView(this).apply {
+            text = "No callback triggered yet"
+            textSize = 16f
+            setPadding(0, 0, 0, 30)
+        }
+
+        // Inject button
+        val injectButton = Button(this).apply {
+            text = "Inject JS to WebView"
             setOnClickListener {
+                // Get timestamp
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+                val currentTime = dateFormat.format(Date())
+
                 val resultIntent = Intent()
-                resultIntent.putExtra("publicToken", "mock_public_token_12345")
+                resultIntent.putExtra("timestamp", currentTime)
+                resultIntent.putExtra("timestampMillis", System.currentTimeMillis())
                 setResult(RESULT_OK, resultIntent)
-                finish()
+
+                // Update timestamp display
+                timestampText.text = "Inject triggered at: $currentTime"
+
+                // Don't call finish() - activity stays open
             }
         }
 
-        // Cancel button
-        val cancelButton = Button(this).apply {
-            text = "Cancel (Exit)"
+        // Close button
+        val closeButton = Button(this).apply {
+            text = "Close Activity"
             setOnClickListener {
-                setResult(RESULT_CANCELED)
                 finish()
             }
         }
 
-        layout.addView(successButton)
-        layout.addView(cancelButton)
+        layout.addView(timestampText)
+        layout.addView(injectButton)
+        layout.addView(closeButton)
 
         setContentView(layout)
     }

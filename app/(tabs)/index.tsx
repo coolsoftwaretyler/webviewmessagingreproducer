@@ -2,39 +2,38 @@ import Constants from "expo-constants";
 import { useRef } from "react";
 import { Button, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
-import CustomLink from '../../CustomLink';
+import CustomLink from "../../CustomLink";
 
 export default function App() {
   const webviewRef = useRef<WebView>(null);
 
-  const openCustomLink = () => {
-    CustomLink.open(
-      (success) => {
-        console.log('Custom Link Success:', success);
-        console.log('Public Token:', success.publicToken);
-        console.log('Message:', success.message);
-        // Handle successful link
-      },
-      (exit) => {
-        console.log('Custom Link Exit:', exit);
-        console.log('Message:', exit.message);
-        // Handle exit
-      }
+  const injectJavaScriptToWebView = (
+    timestamp: string,
+    nativeTimestamp?: string 
+  ) => {
+    webviewRef.current?.injectJavaScript(
+      `document.body.innerHTML = "JavaScript injected at ${timestamp} with native timestamp ${nativeTimestamp}";`
     );
+  };
+
+  const reloadWebView = () => {
+    webviewRef.current?.reload();
+  };
+
+  const openCustomLink = () => {
+    CustomLink.open((data) => {
+      injectJavaScriptToWebView(new Date().toISOString(), data.kotlinTimestamp);
+    });
   };
 
   return (
     <View style={styles.container}>
       <Button
-        title="Open Custom Link Activity"
-        onPress={openCustomLink}
+        title="Inject JS to webview"
+        onPress={() => injectJavaScriptToWebView(new Date().toISOString())}
       />
-      <Button
-        title="Trigger Alert"
-        onPress={() =>
-          webviewRef.current?.injectJavaScript('alert("Hello, world!")')
-        }
-      />
+      <Button title="Open Custom Link" onPress={openCustomLink} />
+      <Button title="Reload Webview" onPress={reloadWebView} />
       <WebView
         style={styles.webview}
         source={{ uri: "https://expo.dev" }}

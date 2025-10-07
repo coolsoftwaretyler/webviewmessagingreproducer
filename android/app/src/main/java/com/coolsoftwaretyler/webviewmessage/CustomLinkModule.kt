@@ -13,12 +13,12 @@ import com.facebook.react.bridge.Arguments
 class CustomLinkModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext), ActivityEventListener {
 
-    private var onSuccessCallback: Callback? = null
-    private var onExitCallback: Callback? = null
+    private var onInjectCallback: Callback? = null
 
     companion object {
         const val REQUEST_CODE = 12345
         const val NAME = "CustomLink"
+        private var instance: CustomLinkModule? = null
     }
 
     init {
@@ -30,11 +30,10 @@ class CustomLinkModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun open(onSuccessCallback: Callback, onExitCallback: Callback) {
+    fun open(onInjectCallback: Callback) {
         val activity = currentActivity ?: throw IllegalStateException("Current activity is null")
 
-        this.onSuccessCallback = onSuccessCallback
-        this.onExitCallback = onExitCallback
+        this.onInjectCallback = onInjectCallback
 
         // Launch the custom activity
         val intent = Intent(activity, CustomLinkActivity::class.java)
@@ -47,23 +46,15 @@ class CustomLinkModule(reactContext: ReactApplicationContext) :
         resultCode: Int,
         data: Intent?
     ) {
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                val result = Arguments.createMap()
-                result.putString("status", "success")
-                result.putString("publicToken", data?.getStringExtra("publicToken") ?: "mock_public_token")
-                result.putString("message", "Link completed successfully")
-                onSuccessCallback?.invoke(result)
-            } else {
-                val result = Arguments.createMap()
-                result.putString("status", "exit")
-                result.putString("message", "User exited the flow")
-                onExitCallback?.invoke(result)
-            }
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            val result = Arguments.createMap()
+            result.putString("kotlinTimestamp", data?.getStringExtra("timestamp") ?: "")
+            result.putDouble("kotlinTimestampMillis", data?.getLongExtra("timestampMillis", 0L)?.toDouble() ?: 0.0)
+            result.putDouble("jsTimestampMillis", System.currentTimeMillis().toDouble())
+            onInjectCallback?.invoke(result)
 
-            // Clear callbacks
-            onSuccessCallback = null
-            onExitCallback = null
+            // Clear callback
+            onInjectCallback = null
         }
     }
 
