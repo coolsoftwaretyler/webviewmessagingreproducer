@@ -77,6 +77,36 @@ On iOS this works perfectly. But on Android, you'll see the timestamps drift ver
 - **Plaid**: Converts native objects to dictionaries/WritableMaps for React Native
 - **Ours**: Converts timestamp data to dictionary/WritableMap
 
+### 7. **Event Emitter Pattern**
+
+- **Plaid** (`usePlaidEmitter`):
+
+  - Emits events **during** the Link flow while UI is still open
+  - iOS: Uses `RCTEventEmitter` with `sendEventWithName:@"onEvent"` (RNLinksdk.mm:98-114)
+  - Android: Uses `DeviceEventManagerModule.RCTDeviceEventEmitter` (PlaidModule.kt:109-114)
+  - React hook uses `NativeEventEmitter` with cleanup on unmount
+
+- **Ours** (`useCustomLinkEmitter`):
+
+  - **iOS** (`CustomLinkModule.mm:88-119`):
+    - Extends `RCTEventEmitter` instead of `NSObject`
+    - Implements `supportedEvents`, `startObserving`, `stopObserving`
+    - Implements required `addListener` and `removeListeners` methods
+    - Uses `_hasObservers` to track active listeners
+    - Emits events via `sendEventWithName:@"onCustomEvent"` when button is tapped while view controller is still open
+
+  - **Android** (`CustomLinkModule.kt:19-27, 80-86`):
+    - Static `emitEvent` method in companion object for activity-to-module communication
+    - `sendEvent` helper with `hasActiveCatalystInstance()` check for safety
+    - Activity calls `CustomLinkModule.emitEvent()` when button is tapped while activity is still open
+    - Emits via `DeviceEventManagerModule.RCTDeviceEventEmitter`
+
+  - **React Hook** (`CustomLink.ts:18-27`):
+    - Creates `NativeEventEmitter` instance
+    - Adds listener for `onCustomEvent`
+    - Returns cleanup function to remove listener on unmount
+    - Same pattern as Plaid's `usePlaidEmitter`
+
 ### Implementation Details
 
 ### Android
