@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.graphics.Color
+import com.facebook.react.bridge.Arguments
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,10 +40,19 @@ class CustomLinkActivity : Activity() {
                 // Get timestamp
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
                 val currentTime = dateFormat.format(Date())
+                val timestampMillis = System.currentTimeMillis()
+
+                // Emit event while activity is still open
+                val eventData = Arguments.createMap().apply {
+                    putString("nativeTimestamp", currentTime)
+                    putDouble("nativeTimestampMillis", timestampMillis.toDouble())
+                    putDouble("jsTimestampMillis", System.currentTimeMillis().toDouble())
+                }
+                CustomLinkModule.emitEvent("onCustomEvent", eventData)
 
                 val resultIntent = Intent()
                 resultIntent.putExtra("nativeTimestamp", currentTime)
-                resultIntent.putExtra("nativeTimestampMillis", System.currentTimeMillis())
+                resultIntent.putExtra("nativeTimestampMillis", timestampMillis)
                 setResult(RESULT_OK, resultIntent)
 
                 // Update timestamp display

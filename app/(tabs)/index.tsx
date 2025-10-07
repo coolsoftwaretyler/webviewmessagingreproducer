@@ -2,17 +2,26 @@ import Constants from "expo-constants";
 import { useRef } from "react";
 import { Button, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
-import CustomLink from "../../CustomLink";
+import CustomLink, { useCustomLinkEmitter } from "../../CustomLink";
 
 export default function App() {
   const webviewRef = useRef<WebView>(null);
 
-  const injectJavaScriptToWebView = (
-    timestamp: string,
-    nativeTimestamp?: string 
-  ) => {
+  // Listen to custom events from the native module
+  useCustomLinkEmitter((data) => {
+    console.log("Event received via emitter:", data);
+    console.log("Native Timestamp:", data.nativeTimestamp);
+    console.log("Native Timestamp (ms):", data.nativeTimestampMillis);
+    console.log("JS Event Timestamp (ms):", data.jsTimestampMillis);
+
+    const delay = data.jsTimestampMillis - data.nativeTimestampMillis;
+    console.log(`Delay between Native and JS event: ${delay}ms`);
+    injectJavaScriptToWebView(data.nativeTimestamp);
+  });
+
+  const injectJavaScriptToWebView = (nativeTimestamp?: string) => {
     webviewRef.current?.injectJavaScript(
-      `document.body.innerHTML = "JavaScript injected at ${timestamp} with native timestamp ${nativeTimestamp}";`
+      `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()} with native timestamp ${nativeTimestamp}";`
     );
   };
 
@@ -21,17 +30,8 @@ export default function App() {
   };
 
   const openCustomLink = () => {
-    CustomLink.open((data) => {
-      // Debug output
-      console.log('Callback received:', data);
-      console.log('Native Timestamp:', data.nativeTimestamp);
-      console.log('Native Timestamp (ms):', data.nativeTimestampMillis);
-      console.log('JS Callback Timestamp (ms):', data.jsTimestampMillis);
-
-      const delay = data.jsTimestampMillis - data.nativeTimestampMillis;
-      console.log(`Delay between Native and JS callback: ${delay}ms`);
-
-      injectJavaScriptToWebView(new Date().toISOString(), data.nativeTimestamp);
+    CustomLink.open(() => {
+      console.log("Callback fired at ", new Date().toISOString());
     });
   };
 
@@ -39,7 +39,7 @@ export default function App() {
     <View style={styles.container}>
       <Button
         title="Inject JS to webview"
-        onPress={() => injectJavaScriptToWebView(new Date().toISOString())}
+        onPress={() => injectJavaScriptToWebView()}
       />
       <Button title="Open Custom Link" onPress={openCustomLink} />
       <Button title="Reload Webview" onPress={reloadWebView} />

@@ -9,6 +9,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class CustomLinkModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext), ActivityEventListener {
@@ -19,10 +20,22 @@ class CustomLinkModule(reactContext: ReactApplicationContext) :
         const val REQUEST_CODE = 12345
         const val NAME = "CustomLink"
         private var instance: CustomLinkModule? = null
+
+        fun emitEvent(eventName: String, params: WritableMap?) {
+            instance?.sendEvent(eventName, params)
+        }
     }
 
     init {
         reactContext.addActivityEventListener(this)
+        instance = this
+    }
+
+    override fun invalidate() {
+        super.invalidate()
+        if (instance == this) {
+            instance = null
+        }
     }
 
     override fun getName(): String {
@@ -51,11 +64,22 @@ class CustomLinkModule(reactContext: ReactApplicationContext) :
             result.putString("nativeTimestamp", data?.getStringExtra("nativeTimestamp") ?: "")
             result.putDouble("nativeTimestampMillis", data?.getLongExtra("nativeTimestampMillis", 0L)?.toDouble() ?: 0.0)
             result.putDouble("jsTimestampMillis", System.currentTimeMillis().toDouble())
+
+            // Send event
+            sendEvent("onCustomEvent", result)
+
+            // Call callback
             onInjectCallback?.invoke(result)
 
             // Clear callback
             onInjectCallback = null
         }
+    }
+
+    private fun sendEvent(eventName: String, params: WritableMap?) {
+        reactApplicationContext
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit(eventName, params)
     }
 
     override fun onNewIntent(intent: Intent?) {

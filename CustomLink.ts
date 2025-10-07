@@ -1,4 +1,5 @@
-import { NativeModules } from 'react-native';
+import { useEffect } from 'react';
+import { NativeModules, NativeEventEmitter } from 'react-native';
 
 interface CallbackData {
   nativeTimestamp: string;
@@ -10,7 +11,20 @@ interface CustomLinkModule {
   open(onInject: (data: CallbackData) => void): void;
 }
 
+type CustomEventListener = (data: CallbackData) => void;
+
 const { CustomLink } = NativeModules;
 
+export const useCustomLinkEmitter = (customEventListener: CustomEventListener) => {
+  useEffect(() => {
+    const emitter = new NativeEventEmitter(CustomLink);
+    const listener = emitter.addListener('onCustomEvent', customEventListener);
+
+    return function cleanup() {
+      listener.remove();
+    };
+  }, [customEventListener]);
+};
+
 export default CustomLink as CustomLinkModule;
-export type { CallbackData };
+export type { CallbackData, CustomEventListener };

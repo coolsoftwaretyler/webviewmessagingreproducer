@@ -82,6 +82,7 @@
 
 @implementation CustomLinkModule {
     RCTResponseSenderBlock _onInjectCallback;
+    BOOL _hasObservers;
 }
 
 RCT_EXPORT_MODULE(CustomLink);
@@ -94,6 +95,20 @@ RCT_EXPORT_MODULE(CustomLink);
     return dispatch_get_main_queue();
 }
 
+- (NSArray<NSString *> *)supportedEvents {
+    return @[@"onCustomEvent"];
+}
+
+- (void)startObserving {
+    _hasObservers = YES;
+    [super startObserving];
+}
+
+- (void)stopObserving {
+    [super stopObserving];
+    _hasObservers = NO;
+}
+
 RCT_EXPORT_METHOD(open:(RCTResponseSenderBlock)onInject) {
     _onInjectCallback = onInject;
 
@@ -102,7 +117,7 @@ RCT_EXPORT_METHOD(open:(RCTResponseSenderBlock)onInject) {
     __weak CustomLinkModule *weakSelf = self;
     viewController.onInjectCallback = ^(NSString *timestamp, double timestampMillis) {
         CustomLinkModule *strongSelf = weakSelf;
-        if (strongSelf && strongSelf->_onInjectCallback) {
+        if (strongSelf) {
             double jsTimestampMillis = [[NSDate date] timeIntervalSince1970] * 1000;
 
             NSDictionary *result = @{
@@ -111,8 +126,16 @@ RCT_EXPORT_METHOD(open:(RCTResponseSenderBlock)onInject) {
                 @"jsTimestampMillis": @(jsTimestampMillis)
             };
 
-            strongSelf->_onInjectCallback(@[result]);
-            strongSelf->_onInjectCallback = nil;
+            // Send event if there are observers
+            if (strongSelf->_hasObservers) {
+                [strongSelf sendEventWithName:@"onCustomEvent" body:result];
+            }
+
+            // Call callback if it exists
+            if (strongSelf->_onInjectCallback) {
+                strongSelf->_onInjectCallback(@[result]);
+                strongSelf->_onInjectCallback = nil;
+            }
         }
     };
 
