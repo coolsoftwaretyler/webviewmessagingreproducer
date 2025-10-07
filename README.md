@@ -69,8 +69,10 @@ If you prefer to do it step-by-step:
 
 ### Android
 
-Android's WebView will have a timestamp much later than your logs. See ./android-does-not-work.mov
+Android's WebView will have a timestamp much later than your logs. See <https://www.dropbox.com/scl/fi/am363k4ymh9y0495b6dy5/android-does-not-work.mov?rlkey=21gumcort3n2c3iso5d8mro7p&st=n6rafpt8&dl=0>
+
+Here's a view of the debugger, so you can see when the `injectJavaScript` method actually does/doesn't get called. Notice how after the Plaid UI is dismissed, we go through a *bunch* of calls, it's like they were queued up by the system and dispatched once that activity finished: <https://www.dropbox.com/scl/fi/nef5h9td6pm0ynwzsw9ep/debug-view.mov?rlkey=mdlgntd234d4kvz5kw3yt80v6&e=1&st=xmaa960x&dl=0>
 
 ### iOS
 
-Works. See ./ios-works.mov
+Works. See: <https://www.dropbox.com/scl/fi/6cqdx9ehlmy7p6jook0t0/ios-works.mov?rlkey=p8j13jmjt7yqncpsm85n8t8h7&e=1&st=q3cw6nal&dl=0>
