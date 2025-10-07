@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		31C51C5DC2701F3B5AA59A89 /* CustomLinkBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = E8CB8071C8AE743B3A261C80 /* CustomLinkBridge.m */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		B52D5884E15EFD387F60CE90 /* libPods-webviewmessage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FD625F26B74F2E0EB8505656 /* libPods-webviewmessage.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
@@ -26,6 +27,7 @@
 		AFD3602294F489FCAF35545C /* Pods-webviewmessage.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-webviewmessage.release.xcconfig"; path = "Target Support Files/Pods-webviewmessage/Pods-webviewmessage.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		DDF0B204AA5403DEAACC9CDB /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-webviewmessage/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		E8CB8071C8AE743B3A261C80 /* CustomLinkBridge.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = CustomLinkBridge.m; path = webviewmessage/CustomLinkBridge.m; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = webviewmessage/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* webviewmessage-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "webviewmessage-Bridging-Header.h"; path = "webviewmessage/webviewmessage-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -54,6 +56,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				47CEFEC717B561D2DD776D82 /* PrivacyInfo.xcprivacy */,
+				E8CB8071C8AE743B3A261C80 /* CustomLinkBridge.m */,
 			);
 			name = webviewmessage;
 			sourceTree = "<group>";
@@ -324,6 +327,7 @@
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				EF9A3524031485548C7CA195 /* ExpoModulesProvider.swift in Sources */,
+				31C51C5DC2701F3B5AA59A89 /* CustomLinkBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
