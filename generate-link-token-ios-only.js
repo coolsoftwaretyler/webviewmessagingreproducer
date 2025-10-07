@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Script to generate a Plaid Link token for testing
- *
- * Usage:
- *   node generate-link-token.js
- *
- * Credentials are loaded from .env file (created by setup-plaid.sh)
+ * Script to generate a Plaid Link token for iOS testing (no Android package name)
  */
 
 const https = require('https');
@@ -60,8 +55,7 @@ const requestBody = JSON.stringify({
   products: ['auth', 'transactions'],
   country_codes: ['US'],
   language: 'en',
-  // For Android, you need to specify the package name
-  android_package_name: 'com.coolsoftwaretyler.webviewmessage',
+  // NO android_package_name - this is for iOS testing only
 });
 
 const options = {
@@ -74,8 +68,6 @@ const options = {
     'Content-Length': Buffer.byteLength(requestBody),
   },
 };
-
-console.log('Generating Plaid Link token...\n');
 
 const req = https.request(options, (res) => {
   let data = '';
@@ -96,6 +88,7 @@ const req = https.request(options, (res) => {
         if (process.stdout.isTTY) {
           console.log('\n✅ Success! Your link token is shown above.');
           console.log(`⏰ This token expires at: ${response.expiration}`);
+          console.log('⚠️  Note: This token will work on iOS but NOT on Android');
           console.log('\n📋 To update your app automatically:');
           console.log('   Run ./setup-plaid.sh');
         }

@@ -13,7 +13,7 @@ import {
 } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
 
-const linkToken = "link-sandbox-27fa592e-482d-454c-94d0-67b104face24";
+const linkToken = "link-sandbox-3d3a5dbd-3fa0-4bf2-a9b8-f4cff7b60249";
 
 export default function App() {
   const webviewRef = useRef<WebView>(null);
