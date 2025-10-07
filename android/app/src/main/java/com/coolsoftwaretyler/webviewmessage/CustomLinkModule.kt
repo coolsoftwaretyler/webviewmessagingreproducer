@@ -48,8 +48,8 @@ class CustomLinkModule(reactContext: ReactApplicationContext) :
     ) {
         if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val result = Arguments.createMap()
-            result.putString("kotlinTimestamp", data?.getStringExtra("timestamp") ?: "")
-            result.putDouble("kotlinTimestampMillis", data?.getLongExtra("timestampMillis", 0L)?.toDouble() ?: 0.0)
+            result.putString("nativeTimestamp", data?.getStringExtra("nativeTimestamp") ?: "")
+            result.putDouble("nativeTimestampMillis", data?.getLongExtra("nativeTimestampMillis", 0L)?.toDouble() ?: 0.0)
             result.putDouble("jsTimestampMillis", System.currentTimeMillis().toDouble())
             onInjectCallback?.invoke(result)
 

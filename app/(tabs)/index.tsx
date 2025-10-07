@@ -22,7 +22,16 @@ export default function App() {
 
   const openCustomLink = () => {
     CustomLink.open((data) => {
-      injectJavaScriptToWebView(new Date().toISOString(), data.kotlinTimestamp);
+      // Debug output
+      console.log('Callback received:', data);
+      console.log('Native Timestamp:', data.nativeTimestamp);
+      console.log('Native Timestamp (ms):', data.nativeTimestampMillis);
+      console.log('JS Callback Timestamp (ms):', data.jsTimestampMillis);
+
+      const delay = data.jsTimestampMillis - data.nativeTimestampMillis;
+      console.log(`Delay between Native and JS callback: ${delay}ms`);
+
+      injectJavaScriptToWebView(new Date().toISOString(), data.nativeTimestamp);
     });
   };
 
@@ -36,7 +45,7 @@ export default function App() {
       <Button title="Reload Webview" onPress={reloadWebView} />
       <WebView
         style={styles.webview}
-        source={{ uri: "https://expo.dev" }}
+        source={{ uri: "https://infinite.red" }}
         ref={webviewRef}
       />
     </View>

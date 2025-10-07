@@ -41,8 +41,8 @@ class CustomLinkActivity : Activity() {
                 val currentTime = dateFormat.format(Date())
 
                 val resultIntent = Intent()
-                resultIntent.putExtra("timestamp", currentTime)
-                resultIntent.putExtra("timestampMillis", System.currentTimeMillis())
+                resultIntent.putExtra("nativeTimestamp", currentTime)
+                resultIntent.putExtra("nativeTimestampMillis", System.currentTimeMillis())
                 setResult(RESULT_OK, resultIntent)
 
                 // Update timestamp display

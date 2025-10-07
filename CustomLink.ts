@@ -1,8 +1,8 @@
 import { NativeModules } from 'react-native';
 
 interface CallbackData {
-  kotlinTimestamp: string;
-  kotlinTimestampMillis: number;
+  nativeTimestamp: string;
+  nativeTimestampMillis: number;
   jsTimestampMillis: number;
 }
 
