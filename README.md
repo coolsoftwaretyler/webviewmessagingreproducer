@@ -28,100 +28,18 @@ On iOS this works perfectly. But on Android, you'll see the timestamps drift ver
    npm run ios
    ```
 
-## CustomLink parity with react-native-plaid-link-sdk
+## Reproduce the bug
 
-### 1. Modal Native UI Presentation
-
-- **Plaid**: Presents `PLKHandler` view controller modally
-- **Ours**: Presents `CustomLinkViewController` (iOS) / `CustomLinkActivity` (Android) modally
-
-### 2. Callback-Based API
-
-- **Plaid**: `open({ onSuccess, onExit })` with callbacks for results
-- **Ours**: `open(onInject)` with callback for button press
-
-### 3. **Android: Activity Result Pattern**
-
-- **Plaid** (`PlaidModule.kt:237-269`):
-
-  - Implements `ActivityEventListener`
-  - Uses `onActivityResult` to handle data from Plaid Activity
-  - Stores callbacks and invokes them with results
-
-- **Ours** (`CustomLinkModule.kt:43-59`):
-  - Implements `ActivityEventListener`
-  - Uses `onActivityResult` to handle data from `CustomLinkActivity`
-  - Stores callback and invokes it with timestamp data
-
-### 4. **iOS: Modal Presentation with Callbacks**
-
-- **Plaid** (`RNLinksdk.mm:126-176`):
-
-  - Creates handler in `createPlaidLink`
-  - Stores `successCallback` and `exitCallback`
-  - Presents view controller using `RCTPresentedViewController()`
-  - Uses weak/strong self pattern to avoid retain cycles
-
-- **Ours** (`CustomLinkModule.mm:97-126`):
-  - Stores `_onInjectCallback`
-  - Creates `CustomLinkViewController`
-  - Presents using `RCTPresentedViewController()` (same as Plaid!)
-  - Uses weak/strong self pattern to avoid retain cycles
-
-### 5. **Main Thread Execution**
-
-- **Plaid**: `requiresMainQueueSetup` and `dispatch_get_main_queue()`
-- **Ours**: Same pattern for iOS; Android handles automatically
-
-### 6. **Data Marshaling**
-
-- **Plaid**: Converts native objects to dictionaries/WritableMaps for React Native
-- **Ours**: Converts timestamp data to dictionary/WritableMap
-
-### 7. **Event Emitter Pattern**
-
-- **Plaid** (`usePlaidEmitter`):
-
-  - Emits events **during** the Link flow while UI is still open
-  - iOS: Uses `RCTEventEmitter` with `sendEventWithName:@"onEvent"` (RNLinksdk.mm:98-114)
-  - Android: Uses `DeviceEventManagerModule.RCTDeviceEventEmitter` (PlaidModule.kt:109-114)
-  - React hook uses `NativeEventEmitter` with cleanup on unmount
-
-- **Ours** (`useCustomLinkEmitter`):
-
-  - **iOS** (`CustomLinkModule.mm:88-119`):
-    - Extends `RCTEventEmitter` instead of `NSObject`
-    - Implements `supportedEvents`, `startObserving`, `stopObserving`
-    - Implements required `addListener` and `removeListeners` methods
-    - Uses `_hasObservers` to track active listeners
-    - Emits events via `sendEventWithName:@"onCustomEvent"` when button is tapped while view controller is still open
-
-  - **Android** (`CustomLinkModule.kt:19-27, 80-86`):
-    - Static `emitEvent` method in companion object for activity-to-module communication
-    - `sendEvent` helper with `hasActiveCatalystInstance()` check for safety
-    - Activity calls `CustomLinkModule.emitEvent()` when button is tapped while activity is still open
-    - Emits via `DeviceEventManagerModule.RCTDeviceEventEmitter`
-
-  - **React Hook** (`CustomLink.ts:18-27`):
-    - Creates `NativeEventEmitter` instance
-    - Adds listener for `onCustomEvent`
-    - Returns cleanup function to remove listener on unmount
-    - Same pattern as Plaid's `usePlaidEmitter`
-
-### Implementation Details
+1. Tap "Initialize Plaid Link"
+2. Tap "Open Plaid Link"
+3. Go through the onboarding - choose a bank, choose an account, accept, come back to the main index screen
+4. Compare the logs from Metro/React Native DevTools against the timestamp you see in the webview.
+5. The latest time stamp in the logs should match what you see in the WebView
 
 ### Android
 
-**Files:**
+Android's WebView will have a timestamp much later than your logs
 
-- `CustomLinkModule.kt` - React Native module that launches the activity
-- `CustomLinkActivity.kt` - Native activity with UI
-- `CustomLinkPackage.kt` - Package registration
+### iOS
 
-#### iOS
-
-**Files:**
-
-- `CustomLinkModule.mm` - React Native module
-- `CustomLinkModule.h` - Header file
-- Inline `CustomLinkViewController` class
+Works

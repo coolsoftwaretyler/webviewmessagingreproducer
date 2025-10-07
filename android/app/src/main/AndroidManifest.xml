@@ -27,6 +27,5 @@
         <data android:scheme="webviewmessage"/>
       </intent-filter>
     </activity>
-    <activity android:name=".CustomLinkActivity" android:theme="@style/AppTheme" android:exported="false"/>
   </application>
 </manifest>
