@@ -1,6 +1,21 @@
-# Welcome to your Expo app 👋
+# React Native WebView injectJavaScript reproducer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is an Expo SDK 53 app that includes [react-native-webview](https://www.npmjs.com/package/react-native-webview?activeTab=readme). In `app/(tabs)/index.tsx`, it has a function called `injectJavaScriptToWebView`, which replaces the webview content with a string that contains 1 or 2 timestamps: the time at which it was called, and optionally the time a native event triggered it.
+
+You can tap a button to call `injectJavaScriptToWebView` directly from React Native on the JS layer. That will show the side effect immediately.
+
+Then you can reload the webview using the reload button.
+
+Once you've done that, tap "Open Custom Link". This button calls `CustomLink.open`, which is a native module intended to be fairly analogous to the [react-native-plaid-link sdk open function](https://plaid.com/docs/link/react-native/#open).
+
+On the new UI, you'll have the option to "Inject JS to WebView". Once you do that, you'll see a time stamp. If you close the UI, you should see the times at which:
+
+1. The native event was triggered
+2. The WebView received the call
+
+On iOS, these times will be very close - almost immediate, with some reasonable millisecond level drift.
+
+On Android, these times will drift much further, because React Native WebView does not receive the message until the UI is totally closed. The hypothesis is that opening in a separate Activity means React Native WebView will not respond to `injectJavaScript` until that activity is done, whereas iOS has a totally different model of process control which allows it to run concurrently.
 
 ## Get started
 
@@ -13,38 +28,74 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 2. Start the app
 
    ```bash
-   npx expo start
+   npm run android
+   npm run ios
    ```
 
-In the output, you'll find options to open the app in a
+## CustomLink parity with react-native-plaid-link-sdk
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 1. Modal Native UI Presentation
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Plaid**: Presents `PLKHandler` view controller modally
+- **Ours**: Presents `CustomLinkViewController` (iOS) / `CustomLinkActivity` (Android) modally
 
-## Get a fresh project
+### 2. Callback-Based API
 
-When you're ready, run:
+- **Plaid**: `open({ onSuccess, onExit })` with callbacks for results
+- **Ours**: `open(onInject)` with callback for button press
 
-```bash
-npm run reset-project
-```
+### 3. **Android: Activity Result Pattern**
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Plaid** (`PlaidModule.kt:237-269`):
 
-## Learn more
+  - Implements `ActivityEventListener`
+  - Uses `onActivityResult` to handle data from Plaid Activity
+  - Stores callbacks and invokes them with results
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Ours** (`CustomLinkModule.kt:43-59`):
+  - Implements `ActivityEventListener`
+  - Uses `onActivityResult` to handle data from `CustomLinkActivity`
+  - Stores callback and invokes it with timestamp data
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 4. **iOS: Modal Presentation with Callbacks**
 
-## Join the community
+- **Plaid** (`RNLinksdk.mm:126-176`):
 
-Join our community of developers creating universal apps.
+  - Creates handler in `createPlaidLink`
+  - Stores `successCallback` and `exitCallback`
+  - Presents view controller using `RCTPresentedViewController()`
+  - Uses weak/strong self pattern to avoid retain cycles
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Ours** (`CustomLinkModule.mm:97-126`):
+  - Stores `_onInjectCallback`
+  - Creates `CustomLinkViewController`
+  - Presents using `RCTPresentedViewController()` (same as Plaid!)
+  - Uses weak/strong self pattern to avoid retain cycles
+
+### 5. **Main Thread Execution**
+
+- **Plaid**: `requiresMainQueueSetup` and `dispatch_get_main_queue()`
+- **Ours**: Same pattern for iOS; Android handles automatically
+
+### 6. **Data Marshaling**
+
+- **Plaid**: Converts native objects to dictionaries/WritableMaps for React Native
+- **Ours**: Converts timestamp data to dictionary/WritableMap
+
+### Implementation Details
+
+### Android
+
+**Files:**
+
+- `CustomLinkModule.kt` - React Native module that launches the activity
+- `CustomLinkActivity.kt` - Native activity with UI
+- `CustomLinkPackage.kt` - Package registration
+
+#### iOS
+
+**Files:**
+
+- `CustomLinkModule.mm` - React Native module
+- `CustomLinkModule.h` - Header file
+- Inline `CustomLinkViewController` class
