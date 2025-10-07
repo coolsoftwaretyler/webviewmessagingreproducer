@@ -2,20 +2,15 @@
 
 This is an Expo SDK 53 app that includes [react-native-webview](https://www.npmjs.com/package/react-native-webview?activeTab=readme). In `app/(tabs)/index.tsx`, it has a function called `injectJavaScriptToWebView`, which replaces the webview content with a string that contains 1 or 2 timestamps: the time at which it was called, and optionally the time a native event triggered it.
 
-You can tap a button to call `injectJavaScriptToWebView` directly from React Native on the JS layer. That will show the side effect immediately.
-
-Then you can reload the webview using the reload button.
+You can tap a button to call `injectJavaScriptToWebView` directly from React Native on the JS layer. That will show the side effect immediately, and you'll see the timestamp in the browser is immediate, and the native event timestamp is `undefined`.
 
 Once you've done that, tap "Open Custom Link". This button calls `CustomLink.open`, which is a native module intended to be fairly analogous to the [react-native-plaid-link sdk open function](https://plaid.com/docs/link/react-native/#open).
 
-On the new UI, you'll have the option to "Inject JS to WebView". Once you do that, you'll see a time stamp. If you close the UI, you should see the times at which:
+On the new UI, you'll have the option to "Inject JS to WebView". This will emit events, which `index.tsx` listens to via `useCustomLinkEmitter`. You should see console logs with the current time stamps in Metro/React Native DevTools.
 
-1. The native event was triggered
-2. The WebView received the call
+Tap "Close Activity" and observe the timestamps. You should expect to see the JS timestamp is close to the native timestamp (maybe off by a ms or two).
 
-On iOS, these times will be very close - almost immediate, with some reasonable millisecond level drift.
-
-On Android, these times will drift much further, because React Native WebView does not receive the message until the UI is totally closed. The hypothesis is that opening in a separate Activity means React Native WebView will not respond to `injectJavaScript` until that activity is done, whereas iOS has a totally different model of process control which allows it to run concurrently.
+On iOS this works perfectly. But on Android, you'll see the timestamps drift very far, because the `injectJavaScript` call on React Native webview does not fire until after the new activity is closed.
 
 ## Get started
 

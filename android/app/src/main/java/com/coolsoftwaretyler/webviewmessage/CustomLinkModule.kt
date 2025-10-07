@@ -59,27 +59,30 @@ class CustomLinkModule(reactContext: ReactApplicationContext) :
         resultCode: Int,
         data: Intent?
     ) {
-        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            val result = Arguments.createMap()
-            result.putString("nativeTimestamp", data?.getStringExtra("nativeTimestamp") ?: "")
-            result.putDouble("nativeTimestampMillis", data?.getLongExtra("nativeTimestampMillis", 0L)?.toDouble() ?: 0.0)
-            result.putDouble("jsTimestampMillis", System.currentTimeMillis().toDouble())
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                val result = Arguments.createMap()
+                result.putString("nativeTimestamp", data?.getStringExtra("nativeTimestamp") ?: "")
+                result.putDouble("nativeTimestampMillis", data?.getLongExtra("nativeTimestampMillis", 0L)?.toDouble() ?: 0.0)
+                result.putDouble("jsTimestampMillis", System.currentTimeMillis().toDouble())
 
-            // Send event
-            sendEvent("onCustomEvent", result)
+                // Send event
+                sendEvent("onCustomEvent", result)
 
-            // Call callback
-            onInjectCallback?.invoke(result)
-
-            // Clear callback
+                // Call callback with result
+                onInjectCallback?.invoke(result)
+            }
+            // Always clear callback when activity closes, regardless of result
             onInjectCallback = null
         }
     }
 
     private fun sendEvent(eventName: String, params: WritableMap?) {
-        reactApplicationContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit(eventName, params)
+        if (reactApplicationContext.hasActiveCatalystInstance()) {
+            reactApplicationContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit(eventName, params)
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {

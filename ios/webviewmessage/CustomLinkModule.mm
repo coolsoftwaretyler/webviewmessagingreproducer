@@ -109,6 +109,15 @@ RCT_EXPORT_MODULE(CustomLink);
     _hasObservers = NO;
 }
 
+// Required for RCTEventEmitter
+- (void)addListener:(NSString *)eventName {
+    [super addListener:eventName];
+}
+
+- (void)removeListeners:(double)count {
+    [super removeListeners:count];
+}
+
 RCT_EXPORT_METHOD(open:(RCTResponseSenderBlock)onInject) {
     _onInjectCallback = onInject;
 

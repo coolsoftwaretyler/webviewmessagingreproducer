@@ -66,6 +66,7 @@ class CustomLinkActivity : Activity() {
         val closeButton = Button(this).apply {
             text = "Close Activity"
             setOnClickListener {
+                setResult(RESULT_CANCELED)
                 finish()
             }
         }
@@ -75,5 +76,10 @@ class CustomLinkActivity : Activity() {
         layout.addView(closeButton)
 
         setContentView(layout)
+    }
+
+    override fun onBackPressed() {
+        setResult(RESULT_CANCELED)
+        super.onBackPressed()
     }
 }
