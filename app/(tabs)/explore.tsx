@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, StyleSheet, View } from "react-native";
 import {
   create,
@@ -126,6 +126,24 @@ export default function NoBypassTab() {
   const webviewRef = useRef<WebView>(null);
   const [linkReady, setLinkReady] = useState(false);
 
+  // Initialize Plaid Link on mount
+  useEffect(() => {
+    const initializePlaidLink = () => {
+      try {
+        create({
+          token: linkToken,
+          logLevel: LinkLogLevel.ERROR,
+          noLoadingState: false,
+        });
+        setLinkReady(true);
+      } catch (error) {
+        console.error("Error initializing Plaid Link:", error);
+      }
+    };
+
+    initializePlaidLink();
+  }, []);
+
   // OLD APPROACH: Using webviewRef.current?.injectJavaScript
   const addLog = (message: string, type: 'info' | 'success' | 'error' | 'event' = 'info') => {
     const timestamp = new Date().toLocaleTimeString("en-US", {
@@ -154,34 +172,6 @@ export default function NoBypassTab() {
     webviewRef.current?.reload();
   };
 
-  const initializePlaidLink = () => {
-    if (!linkToken) {
-      alert("Please enter a link token first");
-      return;
-    }
-
-    if (!linkToken.startsWith("link-")) {
-      alert(
-        "Invalid link token format. Plaid link tokens must start with 'link-'. Example: link-sandbox-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      );
-      return;
-    }
-
-    try {
-      create({
-        token: linkToken,
-        logLevel: LinkLogLevel.ERROR,
-        noLoadingState: false,
-      });
-
-      setLinkReady(true);
-      alert("Plaid Link initialized! Now tap 'Open Plaid Link' to open it.");
-    } catch (error) {
-      console.error("Error initializing Plaid Link:", error);
-      alert(`Error initializing Plaid Link: ${error}`);
-    }
-  };
-
   const openPlaidLink = () => {
     if (!linkReady) {
       alert("Please initialize Plaid Link first");
@@ -201,11 +191,6 @@ export default function NoBypassTab() {
 
   return (
     <View style={styles.container}>
-      <Button
-        title="Initialize Plaid Link"
-        onPress={initializePlaidLink}
-        disabled={linkReady}
-      />
       <Button
         title="Open Plaid Link"
         onPress={openPlaidLink}

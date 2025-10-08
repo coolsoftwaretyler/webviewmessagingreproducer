@@ -147,6 +147,24 @@ export default function App() {
     };
   }, []);
 
+  // Initialize Plaid Link on mount
+  useEffect(() => {
+    const initializePlaidLink = () => {
+      try {
+        create({
+          token: linkToken,
+          logLevel: LinkLogLevel.ERROR,
+          noLoadingState: false,
+        });
+        setLinkReady(true);
+      } catch (error) {
+        console.error("Error initializing Plaid Link:", error);
+      }
+    };
+
+    initializePlaidLink();
+  }, []);
+
   usePlaidEmitter((data) => {
     const eventName = data.eventName || "UNKNOWN_EVENT";
     addLog(`${eventName}`, "event");
@@ -154,35 +172,6 @@ export default function App() {
 
   const reloadWebView = () => {
     webviewRef.current?.reload();
-  };
-
-  const initializePlaidLink = () => {
-    if (!linkToken) {
-      alert("Please enter a link token first");
-      return;
-    }
-
-    if (!linkToken.startsWith("link-")) {
-      alert(
-        "Invalid link token format. Plaid link tokens must start with 'link-'. Example: link-sandbox-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      );
-      return;
-    }
-
-    try {
-      // Create/initialize the Plaid Link configuration
-      create({
-        token: linkToken,
-        logLevel: LinkLogLevel.ERROR,
-        noLoadingState: false,
-      });
-
-      setLinkReady(true);
-      alert("Plaid Link initialized! Now tap 'Open Plaid Link' to open it.");
-    } catch (error) {
-      console.error("Error initializing Plaid Link:", error);
-      alert(`Error initializing Plaid Link: ${error}`);
-    }
   };
 
   const openPlaidLink = () => {
@@ -243,11 +232,6 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Button
-        title="Initialize Plaid Link"
-        onPress={initializePlaidLink}
-        disabled={linkReady}
-      />
       <Button
         title="Open Plaid Link"
         onPress={openPlaidLink}
