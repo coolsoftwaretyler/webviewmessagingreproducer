@@ -13,6 +13,7 @@ import {
 } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
 import WebViewAccess from "../../WebViewAccess";
+import DirectWebviewAccessModule from '../../modules/direct-webview-access';
 
 const linkToken = "link-sandbox-fc2f945e-9595-4cfc-9870-f292f1e33833";
 
@@ -126,6 +127,10 @@ const LOGGER_HTML = `
 export default function App() {
   const webviewRef = useRef<WebView>(null);
   const [linkReady, setLinkReady] = useState(false);
+
+  useEffect(() => {
+    DirectWebviewAccessModule.hello()
+  }, [])
 
   // Register the WebView on mount for cached access
   useEffect(() => {
