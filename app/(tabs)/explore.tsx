@@ -13,7 +13,7 @@ import {
 } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
 
-const linkToken = "link-sandbox-fc2f945e-9595-4cfc-9870-f292f1e33833";
+const linkToken = "link-sandbox-acf3d852-78f0-4e59-84d1-d7b7305087af"
 
 const LOGGER_HTML = `
 <!DOCTYPE html>
