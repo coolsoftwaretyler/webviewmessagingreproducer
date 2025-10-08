@@ -2,11 +2,15 @@ package expo.modules.directwebviewaccess
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
+import com.facebook.react.uimanager.util.ReactFindViewUtil
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.kotlin.Promise
+import expo.modules.kotlin.functions.Queues
 import java.lang.ref.WeakReference
 import java.net.URL
 import java.util.WeakHashMap
@@ -15,6 +19,22 @@ class DirectWebviewAccessModule : Module() {
 
   private val webViewCache = WeakHashMap<String, WeakReference<WebView>>()
   private val mainHandler = Handler(Looper.getMainLooper())
+
+  private fun findWebViewInHierarchy(view: View): WebView? {
+    if (view is WebView) {
+      return view
+    }
+    if (view is ViewGroup) {
+      for (i in 0 until view.childCount) {
+        val webView = findWebViewInHierarchy(view.getChildAt(i))
+        if (webView != null) {
+          return webView
+        }
+      }
+    }
+    return null
+  }
+
   // Each module class must implement the definition function. The definition consists of components
   // that describes the module's functionality and behavior.
   // See https://docs.expo.dev/modules/module-api for more details about available components.
@@ -39,9 +59,24 @@ class DirectWebviewAccessModule : Module() {
 
     // Register a WebView by nativeId
     AsyncFunction("registerWebView") { nativeId: String ->
-      // Implementation will be added next
-      "DirectWebviewAccessModule: WebView registered successfully"
-    }
+      Log.d("DirectWebviewAccessModule", "registerWebView called with nativeId: $nativeId")
+
+      val activity = appContext.currentActivity
+        ?: throw Exception("NO_ACTIVITY: Activity doesn't exist")
+
+      val rootView = activity.window.decorView.rootView
+      val view = ReactFindViewUtil.findView(rootView, nativeId)
+        ?: throw Exception("VIEW_NOT_FOUND: View with nativeID '$nativeId' not found")
+
+      Log.d("DirectWebviewAccessModule", "View found, searching for WebView in hierarchy")
+      val webView = findWebViewInHierarchy(view)
+        ?: throw Exception("NOT_WEBVIEW: WebView not found in view hierarchy")
+
+      webViewCache[nativeId] = WeakReference(webView)
+      Log.d("DirectWebviewAccessModule", "WebView registered successfully")
+
+      "WebView registered successfully"
+    }.runOnQueue(Queues.MAIN)
 
     // Defines a JavaScript function that always returns a Promise and whose native code
     // is by default dispatched on the different thread than the JavaScript runtime runs on.

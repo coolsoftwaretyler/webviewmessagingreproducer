@@ -13,7 +13,7 @@ import {
 } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
 import WebViewAccess from "../../WebViewAccess";
-import DirectWebviewAccessModule from '../../modules/direct-webview-access';
+import DirectWebviewAccessModule from "../../modules/direct-webview-access";
 
 const linkToken = "link-sandbox-fc2f945e-9595-4cfc-9870-f292f1e33833";
 
@@ -129,29 +129,43 @@ export default function App() {
   const [linkReady, setLinkReady] = useState(false);
 
   useEffect(() => {
-    DirectWebviewAccessModule.hello()
-    DirectWebviewAccessModule.registerWebView("webview");
-  }, [])
+    const registerWebViewAsync = async () => {
+      if (webviewRef.current)
+        try {
+          console.log(
+            "About to call DirectWebviewAccessModule.registerWebView"
+          );
+          const result = await DirectWebviewAccessModule.registerWebView(
+            "webview"
+          );
+          console.log("Result from registerWebView:", result);
+        } catch (error) {
+          console.error("Error from registerWebView:", error);
+        }
+    };
+
+    registerWebViewAsync();
+  }, []);
 
   // Register the WebView on mount for cached access
-  useEffect(() => {
-    const registerWebViewAsync = async () => {
-      try {
-        await WebViewAccess.registerWebView("webview");
-        console.log("WebView registered successfully");
-      } catch (error) {
-        console.error("Failed to register WebView:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const registerWebViewAsync = async () => {
+  //     try {
+  //       await WebViewAccess.registerWebView("webview");
+  //       console.log("WebView registered successfully");
+  //     } catch (error) {
+  //       console.error("Failed to register WebView:", error);
+  //     }
+  //   };
 
-    // Small delay to ensure WebView is mounted
-    const timer = setTimeout(registerWebViewAsync, 500);
+  //   // Small delay to ensure WebView is mounted
+  //   const timer = setTimeout(registerWebViewAsync, 500);
 
-    return () => {
-      clearTimeout(timer);
-      WebViewAccess.unregisterWebView("webview");
-    };
-  }, []);
+  //   return () => {
+  //     clearTimeout(timer);
+  //     WebViewAccess.unregisterWebView("webview");
+  //   };
+  // }, []);
 
   // Initialize Plaid Link on mount
   useEffect(() => {
@@ -221,20 +235,20 @@ export default function App() {
     }
   };
 
-  const injectJSViaModule = async (js: string) => {
-    console.log("injectJSViaModule called with script:", js.substring(0, 50));
-    try {
-      const result = await WebViewAccess.injectJavaScriptByNativeId(
-        "webview",
-        js
-      );
-      console.log("JavaScript injection succeeded, result:", result);
-      return result;
-    } catch (error) {
-      console.error("Error injecting JS via module:", error);
-      throw error;
-    }
-  };
+  // const injectJSViaModule = async (js: string) => {
+  //   console.log("injectJSViaModule called with script:", js.substring(0, 50));
+  //   try {
+  //     const result = await WebViewAccess.injectJavaScriptByNativeId(
+  //       "webview",
+  //       js
+  //     );
+  //     console.log("JavaScript injection succeeded, result:", result);
+  //     return result;
+  //   } catch (error) {
+  //     console.error("Error injecting JS via module:", error);
+  //     throw error;
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
