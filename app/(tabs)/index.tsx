@@ -18,7 +18,10 @@ export default function App() {
     console.log(`[${timestamp}] [${type.toUpperCase()}]`, message);
 
     try {
-      await DirectWebviewAccessModule.injectJavaScriptByNativeId("webview", script);
+      await DirectWebviewAccessModule.injectJavaScriptByNativeId(
+        "webview",
+        script
+      );
     } catch (error) {
       console.error(`[${timestamp}] Failed to add log to WebView:`, error);
     }

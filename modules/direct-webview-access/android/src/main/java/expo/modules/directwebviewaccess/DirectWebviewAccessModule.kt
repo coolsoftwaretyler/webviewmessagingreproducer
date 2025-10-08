@@ -34,6 +34,7 @@ class DirectWebviewAccessModule : Module() {
     return webView
   }
 
+  // Helper function to find a WebView in a view hierarchy
   private fun findWebViewInHierarchy(view: View): WebView? {
     if (view is WebView) {
       return view
@@ -74,7 +75,6 @@ class DirectWebviewAccessModule : Module() {
 
         Log.d("DirectWebviewAccessModule", "WebView found, injecting JavaScript: ${script.take(50)}...")
 
-        // Inject JavaScript into the WebView
         webView.evaluateJavascript(script) { result ->
           Log.d("DirectWebviewAccessModule", "JavaScript executed successfully, result: $result")
           promise.resolve(result)
