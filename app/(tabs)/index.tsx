@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import { useRef, useState } from "react";
-import { Button, StyleSheet, View } from "react-native";
+import { Button, StyleSheet, View, Alert } from "react-native";
 import {
   create,
   dismissLink,
@@ -12,6 +12,7 @@ import {
   usePlaidEmitter,
 } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
+import WebViewAccess from "../../WebViewAccess";
 
 const linkToken = "link-sandbox-3d3a5dbd-3fa0-4bf2-a9b8-f4cff7b60249";
 
@@ -80,6 +81,37 @@ export default function App() {
     });
   };
 
+  // Demo: Access WebView using nativeID
+  const getWebViewUrl = async () => {
+    try {
+      const url = await WebViewAccess.getWebViewByNativeId("webview");
+      Alert.alert("WebView URL", url);
+    } catch (error) {
+      Alert.alert("Error", String(error));
+    }
+  };
+
+  const getWebViewTitle = async () => {
+    try {
+      const title = await WebViewAccess.getWebViewTitle("webview");
+      Alert.alert("WebView Title", title);
+    } catch (error) {
+      Alert.alert("Error", String(error));
+    }
+  };
+
+  const injectJSViaModule = async () => {
+    try {
+      const result = await WebViewAccess.injectJavaScriptByNativeId(
+        "webview",
+        "document.body.style.backgroundColor = 'lightblue'; document.title;"
+      );
+      Alert.alert("Injected JS", `Background changed to blue. Title: ${result}`);
+    } catch (error) {
+      Alert.alert("Error", String(error));
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Button
@@ -97,6 +129,12 @@ export default function App() {
         onPress={() => injectJavaScriptToWebView()}
       />
       <Button title="Reload Webview" onPress={reloadWebView} />
+
+      {/* Native Module Demo Buttons */}
+      <Button title="Get WebView URL (Native)" onPress={getWebViewUrl} />
+      <Button title="Get WebView Title (Native)" onPress={getWebViewTitle} />
+      <Button title="Inject JS via Native Module" onPress={injectJSViaModule} />
+
       <WebView
         style={styles.webview}
         source={{ uri: "https://infinite.red" }}
