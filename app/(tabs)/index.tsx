@@ -1,134 +1,42 @@
-import Constants from "expo-constants";
-import { useRef, useState } from "react";
-import { Button, StyleSheet, View } from "react-native";
-import {
-  create,
-  dismissLink,
-  LinkExit,
-  LinkIOSPresentationStyle,
-  LinkLogLevel,
-  LinkSuccess,
-  open,
-  usePlaidEmitter,
-} from "react-native-plaid-link-sdk";
+import { useRef } from "react";
+import { usePlaidEmitter } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
-
-const linkToken = "link-sandbox-3d3a5dbd-3fa0-4bf2-a9b8-f4cff7b60249";
+import { PlaidWebViewLogger } from "../../components/PlaidWebViewLogger";
+import { createLogScript, formatTimestamp } from "../../constants/logger";
+import DirectWebviewAccessModule from "../../modules/direct-webview-access";
 
 export default function App() {
   const webviewRef = useRef<WebView>(null);
-  const [linkReady, setLinkReady] = useState(false);
 
-  usePlaidEmitter((data) => {
-    console.log("Plaid link event at ", new Date().toISOString());
-    injectJavaScriptToWebView();
-  });
+  const addLog = async (
+    message: string,
+    type: "info" | "success" | "error" | "event" = "info"
+  ) => {
+    const timestamp = formatTimestamp();
+    const script = createLogScript(message, type);
 
-  const injectJavaScriptToWebView = () => {
-    webviewRef.current?.injectJavaScript(
-      `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
-    );
-  };
-
-  const reloadWebView = () => {
-    webviewRef.current?.reload();
-  };
-
-  const initializePlaidLink = () => {
-    if (!linkToken) {
-      alert("Please enter a link token first");
-      return;
-    }
-
-    if (!linkToken.startsWith("link-")) {
-      alert(
-        "Invalid link token format. Plaid link tokens must start with 'link-'. Example: link-sandbox-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      );
-      return;
-    }
+    console.log(`[${timestamp}] [${type.toUpperCase()}]`, message);
 
     try {
-      // Create/initialize the Plaid Link configuration
-      create({
-        token: linkToken,
-        logLevel: LinkLogLevel.ERROR,
-        noLoadingState: false,
-      });
-
-      setLinkReady(true);
-      alert("Plaid Link initialized! Now tap 'Open Plaid Link' to open it.");
+      await DirectWebviewAccessModule.injectJavaScriptByNativeId(
+        "webview",
+        script
+      );
     } catch (error) {
-      console.error("Error initializing Plaid Link:", error);
-      alert(`Error initializing Plaid Link: ${error}`);
+      console.error(`[${timestamp}] Failed to add log to WebView:`, error);
     }
   };
 
-  const openPlaidLink = () => {
-    if (!linkReady) {
-      alert("Please initialize Plaid Link first");
-      return;
-    }
-
-    open({
-      onSuccess: (success: LinkSuccess) => {
-        dismissLink();
-      },
-      onExit: (linkExit: LinkExit) => {
-        dismissLink();
-      },
-      iOSPresentationStyle: LinkIOSPresentationStyle.MODAL,
-    });
-  };
+  usePlaidEmitter((data) => {
+    const eventName = data.eventName || "UNKNOWN_EVENT";
+    addLog(eventName, "event");
+  });
 
   return (
-    <View style={styles.container}>
-      <Button
-        title="Initialize Plaid Link"
-        onPress={initializePlaidLink}
-        disabled={linkReady}
-      />
-      <Button
-        title="Open Plaid Link"
-        onPress={openPlaidLink}
-        disabled={!linkReady}
-      />
-      <Button
-        title="Inject JS to webview"
-        onPress={() => injectJavaScriptToWebView()}
-      />
-      <Button title="Reload Webview" onPress={reloadWebView} />
-      <WebView
-        style={styles.webview}
-        source={{ uri: "https://infinite.red" }}
-        ref={webviewRef}
-      />
-    </View>
+    <PlaidWebViewLogger
+      title="Event Logger"
+      nativeID="webview"
+      ref={webviewRef}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    marginTop: Constants.statusBarHeight,
-  },
-  inputContainer: {
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  input: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    backgroundColor: "#fff",
-  },
-  webview: {
-    flex: 1,
-  },
-});
