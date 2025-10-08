@@ -48,5 +48,8 @@ app-example
 # Keep module android folders
 !/modules/*/android/
 
+# Exclude module build folder
+/modules/*/android/build/
+
 # Keep module ios folders
 !/modules/*/ios/
