@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import { useRef, useState } from "react";
-import { Button, StyleSheet, View, Alert } from "react-native";
+import { Button, StyleSheet, View } from "react-native";
 import {
   create,
   dismissLink,
@@ -14,7 +14,7 @@ import {
 import { WebView } from "react-native-webview";
 import WebViewAccess from "../../WebViewAccess";
 
-const linkToken = "link-sandbox-3d3a5dbd-3fa0-4bf2-a9b8-f4cff7b60249";
+const linkToken = "link-sandbox-fc2f945e-9595-4cfc-9870-f292f1e33833";
 
 export default function App() {
   const webviewRef = useRef<WebView>(null);
@@ -22,14 +22,10 @@ export default function App() {
 
   usePlaidEmitter((data) => {
     console.log("Plaid link event at ", new Date().toISOString());
-    injectJavaScriptToWebView();
-  });
-
-  const injectJavaScriptToWebView = () => {
-    webviewRef.current?.injectJavaScript(
+    injectJSViaModule(
       `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
     );
-  };
+  });
 
   const reloadWebView = () => {
     webviewRef.current?.reload();
@@ -81,34 +77,11 @@ export default function App() {
     });
   };
 
-  // Demo: Access WebView using nativeID
-  const getWebViewUrl = async () => {
+  const injectJSViaModule = async (js: string) => {
     try {
-      const url = await WebViewAccess.getWebViewByNativeId("webview");
-      Alert.alert("WebView URL", url);
+      await WebViewAccess.injectJavaScriptByNativeId("webview", js);
     } catch (error) {
-      Alert.alert("Error", String(error));
-    }
-  };
-
-  const getWebViewTitle = async () => {
-    try {
-      const title = await WebViewAccess.getWebViewTitle("webview");
-      Alert.alert("WebView Title", title);
-    } catch (error) {
-      Alert.alert("Error", String(error));
-    }
-  };
-
-  const injectJSViaModule = async () => {
-    try {
-      const result = await WebViewAccess.injectJavaScriptByNativeId(
-        "webview",
-        "document.body.style.backgroundColor = 'lightblue'; document.title;"
-      );
-      Alert.alert("Injected JS", `Background changed to blue. Title: ${result}`);
-    } catch (error) {
-      Alert.alert("Error", String(error));
+      console.error("Error injecting JS via module:", error);
     }
   };
 
@@ -126,14 +99,22 @@ export default function App() {
       />
       <Button
         title="Inject JS to webview"
-        onPress={() => injectJavaScriptToWebView()}
+        onPress={() =>
+          injectJSViaModule(
+            `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
+          )
+        }
       />
       <Button title="Reload Webview" onPress={reloadWebView} />
 
-      {/* Native Module Demo Buttons */}
-      <Button title="Get WebView URL (Native)" onPress={getWebViewUrl} />
-      <Button title="Get WebView Title (Native)" onPress={getWebViewTitle} />
-      <Button title="Inject JS via Native Module" onPress={injectJSViaModule} />
+      <Button
+        title="Inject JS via Native Module"
+        onPress={() =>
+          injectJSViaModule(
+            `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
+          )
+        }
+      />
 
       <WebView
         style={styles.webview}

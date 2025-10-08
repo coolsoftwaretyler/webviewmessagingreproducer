@@ -123,14 +123,12 @@ class WebViewAccessModule(reactContext: ReactApplicationContext) : ReactContextB
                     return@runOnUiThread
                 }
 
-                val webView = findWebViewInHierarchy(view)
-
-                if (webView == null) {
-                    promise.reject("NOT_WEBVIEW", "WebView not found in view hierarchy")
+                if (view !is WebView) {
+                    promise.reject("NOT_WEBVIEW", "View found but it's not a WebView")
                     return@runOnUiThread
                 }
 
-                val title = webView.title ?: ""
+                val title = view.title ?: ""
                 promise.resolve(title)
 
             } catch (e: Exception) {
