@@ -148,11 +148,8 @@ export default function App() {
   }, []);
 
   usePlaidEmitter((data) => {
-    const eventName = data.eventName || 'UNKNOWN_EVENT';
-    const metadata = data.metadata ? JSON.stringify(data.metadata, null, 2) : 'No metadata';
-
-    addLog(`Plaid Event: ${eventName}`, 'event');
-    addLog(`Metadata: ${metadata}`, 'info');
+    const eventName = data.eventName || "UNKNOWN_EVENT";
+    addLog(`${eventName}`, "event");
   });
 
   const reloadWebView = () => {
@@ -205,8 +202,11 @@ export default function App() {
     });
   };
 
-  const addLog = async (message: string, type: 'info' | 'success' | 'error' | 'event' = 'info') => {
-    const escapedMessage = message.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+  const addLog = async (
+    message: string,
+    type: "info" | "success" | "error" | "event" = "info"
+  ) => {
+    const escapedMessage = message.replace(/'/g, "\\'").replace(/\n/g, "\\n");
     const script = `window.logger.log('${escapedMessage}', '${type}');`;
 
     console.log(`[${type.toUpperCase()}]`, message);
@@ -221,7 +221,10 @@ export default function App() {
   const injectJSViaModule = async (js: string) => {
     console.log("injectJSViaModule called with script:", js.substring(0, 50));
     try {
-      const result = await WebViewAccess.injectJavaScriptByNativeId("webview", js);
+      const result = await WebViewAccess.injectJavaScriptByNativeId(
+        "webview",
+        js
+      );
       console.log("JavaScript injection succeeded, result:", result);
       return result;
     } catch (error) {
@@ -242,24 +245,7 @@ export default function App() {
         onPress={openPlaidLink}
         disabled={!linkReady}
       />
-      <Button
-        title="Inject JS to webview"
-        onPress={() =>
-          injectJSViaModule(
-            `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
-          )
-        }
-      />
       <Button title="Reload Webview" onPress={reloadWebView} />
-
-      <Button
-        title="Inject JS via Native Module"
-        onPress={() =>
-          injectJSViaModule(
-            `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
-          )
-        }
-      />
 
       <WebView
         style={styles.webview}
