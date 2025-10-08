@@ -8,6 +8,7 @@ declare class DirectWebviewAccessModule extends NativeModule<DirectWebviewAccess
   setValueAsync(value: string): Promise<void>;
   registerWebView(nativeId: string): Promise<string>;
   unregisterWebView(nativeId: string): Promise<string>;
+  injectJavaScriptByNativeId(nativeId: string, script: string): Promise<string>;
 }
 
 // This call loads the native module object from the JSI.

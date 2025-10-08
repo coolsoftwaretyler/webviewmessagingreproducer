@@ -20,6 +20,24 @@ class DirectWebviewAccessModule : Module() {
   private val webViewCache = WeakHashMap<String, WeakReference<WebView>>()
   private val mainHandler = Handler(Looper.getMainLooper())
 
+  private fun getWebView(nativeId: String): WebView? {
+    // First try to get from cache
+    webViewCache[nativeId]?.get()?.let { return it }
+
+    // Fall back to searching view hierarchy
+    val activity = appContext.currentActivity ?: return null
+    val rootView = activity.window?.decorView?.rootView ?: return null
+    val view = ReactFindViewUtil.findView(rootView, nativeId) ?: return null
+    val webView = findWebViewInHierarchy(view)
+
+    // Cache it for next time
+    if (webView != null) {
+      webViewCache[nativeId] = WeakReference(webView)
+    }
+
+    return webView
+  }
+
   private fun findWebViewInHierarchy(view: View): WebView? {
     if (view is WebView) {
       return view
@@ -86,6 +104,34 @@ class DirectWebviewAccessModule : Module() {
       Log.d("DirectWebviewAccessModule", "WebView unregistered successfully")
 
       "WebView unregistered successfully"
+    }.runOnQueue(Queues.MAIN)
+
+    // Inject JavaScript into a WebView by nativeId
+    AsyncFunction("injectJavaScriptByNativeId") { nativeId: String, script: String, promise: Promise ->
+      Log.d("DirectWebviewAccessModule", "injectJavaScriptByNativeId called with nativeId: $nativeId")
+
+      try {
+        Log.d("DirectWebviewAccessModule", "Attempting to get WebView from cache or hierarchy")
+        val webView = getWebView(nativeId)
+
+        if (webView == null) {
+          Log.e("DirectWebviewAccessModule", "WebView with nativeID '$nativeId' not found")
+          promise.reject("NOT_FOUND", "WebView with nativeID '$nativeId' not found", null)
+          return@AsyncFunction
+        }
+
+        Log.d("DirectWebviewAccessModule", "WebView found, injecting JavaScript: ${script.take(50)}...")
+
+        // Inject JavaScript into the WebView
+        webView.evaluateJavascript(script) { result ->
+          Log.d("DirectWebviewAccessModule", "JavaScript executed successfully, result: $result")
+          promise.resolve(result)
+        }
+
+      } catch (e: Exception) {
+        Log.e("DirectWebviewAccessModule", "Error injecting JavaScript", e)
+        promise.reject("ERROR", e.message, e)
+      }
     }.runOnQueue(Queues.MAIN)
 
     // Defines a JavaScript function that always returns a Promise and whose native code
