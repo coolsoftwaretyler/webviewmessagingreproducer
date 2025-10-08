@@ -101,6 +101,7 @@ export default function App() {
         style={styles.webview}
         source={{ uri: "https://infinite.red" }}
         ref={webviewRef}
+        nativeID="webview"
       />
     </View>
   );
