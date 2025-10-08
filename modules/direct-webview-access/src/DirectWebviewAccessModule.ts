@@ -1,10 +1,10 @@
-import { NativeModule, requireNativeModule } from 'expo';
+import { NativeModule, requireNativeModule } from "expo";
 
-import { DirectWebviewAccessModuleEvents } from './DirectWebviewAccess.types';
-
-declare class DirectWebviewAccessModule extends NativeModule<DirectWebviewAccessModuleEvents> {
+declare class DirectWebviewAccessModule extends NativeModule {
   injectJavaScriptByNativeId(nativeId: string, script: string): Promise<string>;
 }
 
 // This call loads the native module object from the JSI.
-export default requireNativeModule<DirectWebviewAccessModule>('DirectWebviewAccess');
+export default requireNativeModule<DirectWebviewAccessModule>(
+  "DirectWebviewAccess"
+);
