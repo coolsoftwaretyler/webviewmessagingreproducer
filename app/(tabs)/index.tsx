@@ -144,7 +144,12 @@ export default function App() {
         }
     };
 
+
     registerWebViewAsync();
+
+    return () => {
+      DirectWebviewAccessModule.unregisterWebView("webview");
+    };
   }, []);
 
   // Register the WebView on mount for cached access

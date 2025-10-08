@@ -78,6 +78,16 @@ class DirectWebviewAccessModule : Module() {
       "WebView registered successfully"
     }.runOnQueue(Queues.MAIN)
 
+    // Unregister a WebView by nativeId
+    AsyncFunction("unregisterWebView") { nativeId: String ->
+      Log.d("DirectWebviewAccessModule", "unregisterWebView called with nativeId: $nativeId")
+
+      webViewCache.remove(nativeId)
+      Log.d("DirectWebviewAccessModule", "WebView unregistered successfully")
+
+      "WebView unregistered successfully"
+    }.runOnQueue(Queues.MAIN)
+
     // Defines a JavaScript function that always returns a Promise and whose native code
     // is by default dispatched on the different thread than the JavaScript runtime runs on.
     AsyncFunction("setValueAsync") { value: String ->
