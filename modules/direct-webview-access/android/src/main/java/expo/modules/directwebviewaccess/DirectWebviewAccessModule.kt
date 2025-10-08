@@ -5,7 +5,6 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
-import com.facebook.react.uimanager.util.ReactFindViewUtil
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.lang.ref.WeakReference
@@ -41,7 +40,7 @@ class DirectWebviewAccessModule : Module() {
     // Register a WebView by nativeId
     AsyncFunction("registerWebView") { nativeId: String ->
       // Implementation will be added next
-      "WebView registered successfully"
+      "DirectWebviewAccessModule: WebView registered successfully"
     }
 
     // Defines a JavaScript function that always returns a Promise and whose native code

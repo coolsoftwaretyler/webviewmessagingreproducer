@@ -130,6 +130,7 @@ export default function App() {
 
   useEffect(() => {
     DirectWebviewAccessModule.hello()
+    DirectWebviewAccessModule.registerWebView("webview");
   }, [])
 
   // Register the WebView on mount for cached access
