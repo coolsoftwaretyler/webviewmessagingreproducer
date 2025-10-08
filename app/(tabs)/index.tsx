@@ -206,15 +206,23 @@ export default function App() {
     message: string,
     type: "info" | "success" | "error" | "event" = "info"
   ) => {
+    const timestamp = new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      fractionalSecondDigits: 3,
+    });
+
     const escapedMessage = message.replace(/'/g, "\\'").replace(/\n/g, "\\n");
     const script = `window.logger.log('${escapedMessage}', '${type}');`;
 
-    console.log(`[${type.toUpperCase()}]`, message);
+    console.log(`[${timestamp}] [${type.toUpperCase()}]`, message);
 
     try {
       await WebViewAccess.injectJavaScriptByNativeId("webview", script);
     } catch (error) {
-      console.error("Failed to add log to WebView:", error);
+      console.error(`[${timestamp}] Failed to add log to WebView:`, error);
     }
   };
 
