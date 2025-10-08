@@ -1,5 +1,8 @@
 package com.coolsoftwaretyler.webviewmessage
 
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -8,8 +11,13 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
 import com.facebook.react.uimanager.util.ReactFindViewUtil
+import java.lang.ref.WeakReference
+import java.util.WeakHashMap
 
 class WebViewAccessModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+
+    private val webViewCache = WeakHashMap<String, WeakReference<WebView>>()
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun getName(): String {
         return "WebViewAccess"
@@ -30,34 +38,74 @@ class WebViewAccessModule(reactContext: ReactApplicationContext) : ReactContextB
         return null
     }
 
-    @ReactMethod
-    fun getWebViewByNativeId(nativeId: String, promise: Promise) {
-        val activity = currentActivity
+    private fun getWebView(nativeId: String): WebView? {
+        // First try to get from cache
+        webViewCache[nativeId]?.get()?.let { return it }
 
-        if (activity == null) {
-            promise.reject("NO_ACTIVITY", "Activity doesn't exist")
-            return
+        // Fall back to searching view hierarchy
+        val activity = currentActivity ?: return null
+        val rootView = activity.window?.decorView?.rootView ?: return null
+        val view = ReactFindViewUtil.findView(rootView, nativeId) ?: return null
+        val webView = findWebViewInHierarchy(view)
+
+        // Cache it for next time
+        if (webView != null) {
+            webViewCache[nativeId] = WeakReference(webView)
         }
 
-        activity.runOnUiThread {
+        return webView
+    }
+
+    @ReactMethod
+    fun registerWebView(nativeId: String, promise: Promise) {
+        mainHandler.post {
             try {
+                val activity = currentActivity
+                if (activity == null) {
+                    promise.reject("NO_ACTIVITY", "Activity doesn't exist")
+                    return@post
+                }
+
                 val rootView = activity.window.decorView.rootView
                 val view = ReactFindViewUtil.findView(rootView, nativeId)
 
                 if (view == null) {
                     promise.reject("VIEW_NOT_FOUND", "View with nativeID '$nativeId' not found")
-                    return@runOnUiThread
+                    return@post
                 }
 
-                // React Native WebView wraps the native WebView, so search in the hierarchy
                 val webView = findWebViewInHierarchy(view)
 
                 if (webView == null) {
                     promise.reject("NOT_WEBVIEW", "WebView not found in view hierarchy")
-                    return@runOnUiThread
+                    return@post
                 }
 
-                // Successfully found the WebView
+                webViewCache[nativeId] = WeakReference(webView)
+                promise.resolve("WebView registered successfully")
+
+            } catch (e: Exception) {
+                promise.reject("ERROR", e.message)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun unregisterWebView(nativeId: String) {
+        webViewCache.remove(nativeId)
+    }
+
+    @ReactMethod
+    fun getWebViewByNativeId(nativeId: String, promise: Promise) {
+        mainHandler.post {
+            try {
+                val webView = getWebView(nativeId)
+
+                if (webView == null) {
+                    promise.reject("NOT_FOUND", "WebView with nativeID '$nativeId' not found")
+                    return@post
+                }
+
                 val url = webView.url ?: "about:blank"
                 promise.resolve(url)
 
@@ -69,36 +117,29 @@ class WebViewAccessModule(reactContext: ReactApplicationContext) : ReactContextB
 
     @ReactMethod
     fun injectJavaScriptByNativeId(nativeId: String, script: String, promise: Promise) {
-        val activity = currentActivity
+        Log.d("WebViewAccessModule", "injectJavaScriptByNativeId called with nativeId: $nativeId")
 
-        if (activity == null) {
-            promise.reject("NO_ACTIVITY", "Activity doesn't exist")
-            return
-        }
-
-        activity.runOnUiThread {
+        mainHandler.post {
             try {
-                val rootView = activity.window.decorView.rootView
-                val view = ReactFindViewUtil.findView(rootView, nativeId)
-
-                if (view == null) {
-                    promise.reject("VIEW_NOT_FOUND", "View with nativeID '$nativeId' not found")
-                    return@runOnUiThread
-                }
-
-                val webView = findWebViewInHierarchy(view)
+                Log.d("WebViewAccessModule", "Attempting to get WebView from cache or hierarchy")
+                val webView = getWebView(nativeId)
 
                 if (webView == null) {
-                    promise.reject("NOT_WEBVIEW", "WebView not found in view hierarchy")
-                    return@runOnUiThread
+                    Log.e("WebViewAccessModule", "WebView with nativeID '$nativeId' not found")
+                    promise.reject("NOT_FOUND", "WebView with nativeID '$nativeId' not found")
+                    return@post
                 }
+
+                Log.d("WebViewAccessModule", "WebView found, injecting JavaScript: ${script.take(50)}...")
 
                 // Inject JavaScript into the WebView
                 webView.evaluateJavascript(script) { result ->
+                    Log.d("WebViewAccessModule", "JavaScript executed successfully, result: $result")
                     promise.resolve(result)
                 }
 
             } catch (e: Exception) {
+                Log.e("WebViewAccessModule", "Error injecting JavaScript", e)
                 promise.reject("ERROR", e.message)
             }
         }
@@ -106,29 +147,16 @@ class WebViewAccessModule(reactContext: ReactApplicationContext) : ReactContextB
 
     @ReactMethod
     fun getWebViewTitle(nativeId: String, promise: Promise) {
-        val activity = currentActivity
-
-        if (activity == null) {
-            promise.reject("NO_ACTIVITY", "Activity doesn't exist")
-            return
-        }
-
-        activity.runOnUiThread {
+        mainHandler.post {
             try {
-                val rootView = activity.window.decorView.rootView
-                val view = ReactFindViewUtil.findView(rootView, nativeId)
+                val webView = getWebView(nativeId)
 
-                if (view == null) {
-                    promise.reject("VIEW_NOT_FOUND", "View with nativeID '$nativeId' not found")
-                    return@runOnUiThread
+                if (webView == null) {
+                    promise.reject("NOT_FOUND", "WebView with nativeID '$nativeId' not found")
+                    return@post
                 }
 
-                if (view !is WebView) {
-                    promise.reject("NOT_WEBVIEW", "View found but it's not a WebView")
-                    return@runOnUiThread
-                }
-
-                val title = view.title ?: ""
+                val title = webView.title ?: ""
                 promise.resolve(title)
 
             } catch (e: Exception) {

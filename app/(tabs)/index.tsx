@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
-import { useRef, useState } from "react";
-import { Button, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Button, StyleSheet, View } from "react-native";
 import {
   create,
   dismissLink,
@@ -20,11 +20,37 @@ export default function App() {
   const webviewRef = useRef<WebView>(null);
   const [linkReady, setLinkReady] = useState(false);
 
+  // Register the WebView on mount for cached access
+  useEffect(() => {
+    const registerWebViewAsync = async () => {
+      try {
+        await WebViewAccess.registerWebView("webview");
+        console.log("WebView registered successfully");
+      } catch (error) {
+        console.error("Failed to register WebView:", error);
+      }
+    };
+
+    // Small delay to ensure WebView is mounted
+    const timer = setTimeout(registerWebViewAsync, 500);
+
+    return () => {
+      clearTimeout(timer);
+      WebViewAccess.unregisterWebView("webview");
+    };
+  }, []);
+
   usePlaidEmitter((data) => {
     console.log("Plaid link event at ", new Date().toISOString());
+    console.log("Plaid event data:", data);
+
+    // Don't await, but do catch errors
     injectJSViaModule(
       `document.body.innerHTML = "JavaScript injected at ${new Date().toISOString()}";`
-    );
+    ).catch((error) => {
+      console.error("Failed to inject JavaScript from Plaid emitter:", error);
+      Alert.alert("Injection Error", String(error));
+    });
   });
 
   const reloadWebView = () => {
@@ -78,10 +104,14 @@ export default function App() {
   };
 
   const injectJSViaModule = async (js: string) => {
+    console.log("injectJSViaModule called with script:", js.substring(0, 50));
     try {
-      await WebViewAccess.injectJavaScriptByNativeId("webview", js);
+      const result = await WebViewAccess.injectJavaScriptByNativeId("webview", js);
+      console.log("JavaScript injection succeeded, result:", result);
+      return result;
     } catch (error) {
       console.error("Error injecting JS via module:", error);
+      throw error;
     }
   };
 
