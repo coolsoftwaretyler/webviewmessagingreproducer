@@ -58,37 +58,6 @@ class DirectWebviewAccessModule : Module() {
     // The module will be accessible from `requireNativeModule('DirectWebviewAccess')` in JavaScript.
     Name("DirectWebviewAccess")
 
-    // Register a WebView by nativeId
-    AsyncFunction("registerWebView") { nativeId: String ->
-      Log.d("DirectWebviewAccessModule", "registerWebView called with nativeId: $nativeId")
-
-      val activity = appContext.currentActivity
-        ?: throw Exception("NO_ACTIVITY: Activity doesn't exist")
-
-      val rootView = activity.window.decorView.rootView
-      val view = ReactFindViewUtil.findView(rootView, nativeId)
-        ?: throw Exception("VIEW_NOT_FOUND: View with nativeID '$nativeId' not found")
-
-      Log.d("DirectWebviewAccessModule", "View found, searching for WebView in hierarchy")
-      val webView = findWebViewInHierarchy(view)
-        ?: throw Exception("NOT_WEBVIEW: WebView not found in view hierarchy")
-
-      webViewCache[nativeId] = WeakReference(webView)
-      Log.d("DirectWebviewAccessModule", "WebView registered successfully")
-
-      "WebView registered successfully"
-    }.runOnQueue(Queues.MAIN)
-
-    // Unregister a WebView by nativeId
-    AsyncFunction("unregisterWebView") { nativeId: String ->
-      Log.d("DirectWebviewAccessModule", "unregisterWebView called with nativeId: $nativeId")
-
-      webViewCache.remove(nativeId)
-      Log.d("DirectWebviewAccessModule", "WebView unregistered successfully")
-
-      "WebView unregistered successfully"
-    }.runOnQueue(Queues.MAIN)
-
     // Inject JavaScript into a WebView by nativeId
     AsyncFunction("injectJavaScriptByNativeId") { nativeId: String, script: String, promise: Promise ->
       Log.d("DirectWebviewAccessModule", "injectJavaScriptByNativeId called with nativeId: $nativeId")

@@ -12,7 +12,6 @@ import {
   usePlaidEmitter,
 } from "react-native-plaid-link-sdk";
 import { WebView } from "react-native-webview";
-import WebViewAccess from "../../WebViewAccess";
 import DirectWebviewAccessModule from "../../modules/direct-webview-access";
 
 const linkToken = "link-sandbox-acf3d852-78f0-4e59-84d1-d7b7305087af";
@@ -128,50 +127,6 @@ export default function App() {
   const webviewRef = useRef<WebView>(null);
   const [linkReady, setLinkReady] = useState(false);
 
-  useEffect(() => {
-    const registerWebViewAsync = async () => {
-      if (webviewRef.current)
-        try {
-          console.log(
-            "About to call DirectWebviewAccessModule.registerWebView"
-          );
-          const result = await DirectWebviewAccessModule.registerWebView(
-            "webview"
-          );
-          console.log("Result from registerWebView:", result);
-        } catch (error) {
-          console.error("Error from registerWebView:", error);
-        }
-    };
-
-
-    registerWebViewAsync();
-
-    return () => {
-      DirectWebviewAccessModule.unregisterWebView("webview");
-    };
-  }, []);
-
-  // Register the WebView on mount for cached access
-  // useEffect(() => {
-  //   const registerWebViewAsync = async () => {
-  //     try {
-  //       await WebViewAccess.registerWebView("webview");
-  //       console.log("WebView registered successfully");
-  //     } catch (error) {
-  //       console.error("Failed to register WebView:", error);
-  //     }
-  //   };
-
-  //   // Small delay to ensure WebView is mounted
-  //   const timer = setTimeout(registerWebViewAsync, 500);
-
-  //   return () => {
-  //     clearTimeout(timer);
-  //     WebViewAccess.unregisterWebView("webview");
-  //   };
-  // }, []);
-
   // Initialize Plaid Link on mount
   useEffect(() => {
     const initializePlaidLink = () => {
@@ -234,26 +189,11 @@ export default function App() {
     console.log(`[${timestamp}] [${type.toUpperCase()}]`, message);
 
     try {
-      await WebViewAccess.injectJavaScriptByNativeId("webview", script);
+      await DirectWebviewAccessModule.injectJavaScriptByNativeId("webview", script);
     } catch (error) {
       console.error(`[${timestamp}] Failed to add log to WebView:`, error);
     }
   };
-
-  // const injectJSViaModule = async (js: string) => {
-  //   console.log("injectJSViaModule called with script:", js.substring(0, 50));
-  //   try {
-  //     const result = await WebViewAccess.injectJavaScriptByNativeId(
-  //       "webview",
-  //       js
-  //     );
-  //     console.log("JavaScript injection succeeded, result:", result);
-  //     return result;
-  //   } catch (error) {
-  //     console.error("Error injecting JS via module:", error);
-  //     throw error;
-  //   }
-  // };
 
   return (
     <View style={styles.container}>
